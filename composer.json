@@ -1,5 +1,12 @@
 {
-    "require": {
-        "phpunit/phpunit": "^5.2"
+  "require": {
+    "phpunit/phpunit": "^5.2",
+    "container-interop/container-interop": "^1.1"
+  },
+  "autoload": {
+    "psr-0": {
+      "DI\\": "library/",
+      "Fixtures\\": "tests/Fixtures/"
     }
+  }
 }
