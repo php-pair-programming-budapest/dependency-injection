@@ -33,10 +33,15 @@ class Container implements ContainerInterface {
             return null;
         }
 
+        // TODO throw only NotFoundException and ContainerException to comply with the interface
+
         $definition = $this->_services[$id];
         if (!class_exists($definition->getClass())) {
             throw new \InvalidArgumentException(sprintf('Class with id: %s does not exist!', $id));
         }
+
+        // TODO store the instantiated objects in an array or in a SplObjectStorage and don't instantiate them twice
+        // TODO pass the arguments specified by the Definition to the class' constructor
 
         $class = $definition->getClass();
         return new $class();
@@ -44,6 +49,7 @@ class Container implements ContainerInterface {
 
     public function set($id, Definition $value) {
         $this->_services[$id] = $value;
+        // TODO remove this function to make the container immutable. Use the constructor to add the services.
     }
 
     /**
