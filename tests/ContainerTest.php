@@ -27,7 +27,9 @@ class ContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($container->has('foo'));
     }
 
-    /** @expectedException \DI\Exception\CircularReferenceException */
+    /**
+     * @expectedException \DI\Exception\CircularReferenceException
+     */
     public function testLoop() {
         $container = new Container([
             'foo' => new Definition('\ArrayObject', ['bar']),

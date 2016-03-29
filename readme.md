@@ -21,7 +21,4 @@ Here are some notes about what we aim to achieve:
 ##### Create a builder class
 * Resolves all the dependencies in the tree and then compiles the Container class
 
-##### Automatically pass services from the container to functions based on the arguments' typehints
-* function someFunction(Request $request) {}
-
 ##### Auto wiring
