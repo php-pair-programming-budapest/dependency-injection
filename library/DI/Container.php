@@ -6,6 +6,7 @@
 
 namespace DI;
 
+use DI\Exception\CircularReferenceException;
 use Interop\Container\ContainerInterface;
 use Interop\Container\Exception\ContainerException;
 use Interop\Container\Exception\NotFoundException;
@@ -16,6 +17,20 @@ class Container implements ContainerInterface {
      * @var Definition[]
      */
     protected $_services = [];
+
+    /**
+     * @var array
+     */
+    protected $_objects = [];
+
+    /**
+     * @var array
+     */
+    protected $_circularReferenceGuard = [];
+
+    function __construct(array $services) {
+        $this->_services = $services;
+    }
 
     /**
      * Finds an entry of the container by its identifier and returns it.
@@ -29,27 +44,40 @@ class Container implements ContainerInterface {
      */
     public function get($id) {
 
+        if (!is_string($id))
+            throw new \InvalidArgumentException;
+
         if (!isset($this->_services[$id])) {
-            return null;
+            throw new Exception\NotFoundException;
         }
 
-        // TODO throw only NotFoundException and ContainerException to comply with the interface
+        if (array_key_exists($id, $this->_circularReferenceGuard))
+            throw new CircularReferenceException;
+
+        $this->_circularReferenceGuard[$id] = true;
 
         $definition = $this->_services[$id];
         if (!class_exists($definition->getClass())) {
-            throw new \InvalidArgumentException(sprintf('Class with id: %s does not exist!', $id));
+            throw new Exception\ContainerException(sprintf('Class with id: %s does not exist!', $id));
         }
 
-        // TODO store the instantiated objects in an array or in a SplObjectStorage and don't instantiate them twice
-        // TODO pass the arguments specified by the Definition to the class' constructor
+        if (array_key_exists($id, $this->_objects))
+            return $this->_objects[$id];
 
         $class = $definition->getClass();
-        return new $class();
-    }
+        $args = $definition->getArgs();
 
-    public function set($id, Definition $value) {
-        $this->_services[$id] = $value;
-        // TODO remove this function to make the container immutable. Use the constructor to add the services.
+        foreach ($args as &$arg) {
+            if (is_string($arg) AND $this->has($arg))
+                $arg = $this->get($arg);
+        }
+
+        $reflection = new \ReflectionClass($class);
+        $this->_objects[$id] = $reflection->newInstanceArgs($args);
+
+        unset($this->_circularReferenceGuard[$id]);
+
+        return $this->_objects[$id];
     }
 
     /**
